@@ -207,7 +207,7 @@ def setrange():
     return flask.redirect(flask.url_for("choose"))
 
     #scan the calendars obtained from the user (and the ones they chose)
-    #get each one's freebusy attribute, find start time and end time
+    #get each one's freebusy attribute, find start time and end time based on chosen range
     #construct arrow objects for the range
     #convert them to dates and display them on the page
     #
@@ -219,7 +219,12 @@ def setrange():
     # entries, but one combined one with a range from 12:00 to 15:00. Because the user is busy for any of the dates listed,
     # giving both busy ranges when there's crossover is hardly optimal. Implement later, the actual ranges come first.
     #
-
+    #also cutoff merge, if the busy range extends past (but still partially exists in) the user's range,
+    #trim the leading hours down so it fits within the range
+    #
+    #once the ranges have been established, format with jinja2
+    #
+    #
 
 ####
 #
