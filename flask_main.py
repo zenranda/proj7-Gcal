@@ -37,7 +37,7 @@ app.logger.setLevel(logging.DEBUG)
 app.secret_key=CONFIG.secret_key
 
 SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
-CLIENT_SECRET_FILE = secrets.admin_secrets.google_key_file  ## You'll need this
+CLIENT_SECRET_FILE = secrets.admin_secrets.google_key_file  ## You'll need this | pipe in google key that's authorized for the web access of the project
 APPLICATION_NAME = 'MeetMe class project'
 
 #############################
@@ -165,7 +165,7 @@ def oauth2callback():
     ## we'll have the 'code' parameter set
   else:
     ## It's the second time through ... we can tell because
-    ## we got the 'code' argument in the URL.
+    ## we got the 'code' argument in the UR.L
     app.logger.debug("Code was in flask.request.args")
     auth_code = flask.request.args.get('code')
     credentials = flow.step2_exchange(auth_code)
@@ -205,6 +205,21 @@ def setrange():
       daterange_parts[0], daterange_parts[1], 
       flask.session['begin_date'], flask.session['end_date']))
     return flask.redirect(flask.url_for("choose"))
+
+    #scan the calendars obtained from the user (and the ones they chose)
+    #get each one's freebusy attribute, find start time and end time
+    #construct arrow objects for the range
+    #convert them to dates and display them on the page
+    #
+    #functionality issue: two calendars with the same busy times will cause this to create 2 arrow dates
+    #solution: put the ranges in a set or something first, then read them off
+    #
+    #usability issue: two ranges which share the same busy ranges between them but have different end/start times should be
+    # combined into one range. for example, a range from 12:00 to 14:00 and a range of 13:00 to 15:00 should not be two individual
+    # entries, but one combined one with a range from 12:00 to 15:00. Because the user is busy for any of the dates listed,
+    # giving both busy ranges when there's crossover is hardly optimal. Implement later, the actual ranges come first.
+    #
+
 
 ####
 #
