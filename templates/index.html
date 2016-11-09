@@ -89,17 +89,22 @@
     prefer down then across). 
     -->
 {% if g.calendars is defined  %}
+  <form action="find_calendars">
   <div class="row">
   {% for cal in g.calendars if cal.selected %}
           <div class="col-md-4">
-	   {{ cal.summary }}
+              <input type="checkbox" name="calendarselect"> {{ cal.summary }}<br>
           </div>
          {% if loop.index is divisibleby 3 %}
           </div> <div class="row">
          {% endif %}
   {% endfor %}
+  <input type="submit" value ="Submit">
   </div>
 {% endif %}
+
+<!---TODO: create a flask function to get the selected calendar names, then get intersected dates for them and feed them back to the page. return to /index? just add the ranges to flask.g.whatever, then use the same logic to feed them back into a page for the loop. Issues:    --->
+
     
 
   </div>  <!-- container (for bootstrap) -->
