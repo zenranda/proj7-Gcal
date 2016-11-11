@@ -37,12 +37,6 @@
 
 <h1>Busy times</h1>
 
-<!--
-  -- If there are any warnings or other messages from a prior action,
-  -- they appear above the rest of the content, just until the next 
-  -- action.
-  -->
-
 {% with messages = get_flashed_messages() %}
   {% if messages %}
     <ul class=flashes>
@@ -82,14 +76,13 @@
 <br /><input type="submit" value="Choose" />
 </form>
 
-    <!--
-    Show the calendar list (if we have it).  This will need to be turned into
-    a form from which calendars can be picked. Up to three entries are
-    shown in each row (but the order is across then down; I would
-    prefer down then across). 
-    -->
+
 {% if g.calendars is defined  %}
-  <form action="find_calendars">
+  <h2>Select time range:</h2>
+  <form action="/index" method="post">
+  <input type="text" name="startTime" value="12:00"><br>
+  <input type="text" name="endTime" value ="16:00"><br>
+  <input type="submit" value = "Submit">
   <div class="row">
   {% for cal in g.calendars if cal.selected %}
           <div class="col-md-4">
@@ -103,7 +96,12 @@
   </div>
 {% endif %}
 
-<!---TODO: create a flask function to get the selected calendar names, then get intersected dates for them and feed them back to the page. return to /index? just add the ranges to flask.g.whatever, then use the same logic to feed them back into a page for the loop. Issues: I'll need to pull the dates and crunch the intersect on flask before the transfer; could be a costly operation (not to mention hard to implement.) --->
+
+{% if g.busy is defined % }
+    {% for itm in g.busy %}
+    
+
+<!---TODO: create a flask function to get the selected calendar names, then get intersected dates for them and feed them back to the page. return to /index? just add the ranges to flask.g.whatever, then use the same logic to feed them back into a page for the loop. Issues:    --->
 
     
 
