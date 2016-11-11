@@ -206,6 +206,20 @@ def setrange():
       flask.session['begin_date'], flask.session['end_date']))
     return flask.redirect(flask.url_for("choose"))
 
+@app.route("/index", methods=['SEND'])
+def getbusy():
+    startdate = request.form["startTime"]
+    enddate = request.form["endTime"]
+    sel = request.form["calendarselect"]     #needs work, get the VALUE of the div the button is attached to?
+    cred = valid_credentials()
+    gcal = get_gcal_service(cred)
+    
+    flask.g.busy = list_busy_times(gcal, enddate, starttdate, sel)
+    
+    
+    
+    return render_template("index.html")
+
     #scan the calendars obtained from the user (and the ones they chose)
     #get each one's freebusy attribute, find start time and end time based on chosen range
     #construct arrow objects for the range
@@ -315,9 +329,14 @@ def list_calendars(service):
     Google Calendars web app) calendars before unselected calendars.
     """
     app.logger.debug("Entering list_calendars")  
+    busy_times = service.freebusy()
     calendar_list = service.calendarList().list().execute()["items"]
+    print(busy_times.query()
+
     result = [ ]
     for cal in calendar_list:
+        print("Calendar\n")
+        print(cal)
         kind = cal["kind"]
         id = cal["id"]
         if "description" in cal: 
@@ -338,6 +357,26 @@ def list_calendars(service):
             "primary": primary
             })
     return sorted(result, key=cal_sort_key)
+          
+          
+def list_busy_times(service, max, min, selected):
+    busyrange = service.freebusy()
+    cal_list = service.calendarList().list().execute()["items"]
+          
+    querymain =  {"timeMax" : FLASK_MAX, "items" : [], "timeMin" : FLASK_MIN } #FLASK_MIN and MAX are gotten by the html
+    grbody = []
+          
+    for cal in cal_list:
+          if cal["id"] in SELECTED_CALENDARS:                                  #SELECTED_CALENDARS are gotten by the html too
+          body = {"id" : cal["id"]
+          grbody.append(body)
+    
+    busy_times = busyrange.query(grbody).list()
+          
+    return (busy_times)         #for use in a later function above
+          #also maybe introduce arrow formatting here
+
+          
 
 
 def cal_sort_key( cal ):
