@@ -29,7 +29,10 @@ import secrets.client_secrets # Per-application secrets
 #  Note to CIS 322 students:  client_secrets is what you turn in.
 #     You need an admin_secrets, but the grader and I don't use yours. 
 #     We use our own admin_secrets file along with your client_secrets
-#     file on our Raspberry Pis. 
+#     file on our Raspberry Pis.
+
+formdatestart = 0
+formdateend = 0
 
 app = flask.Flask(__name__)
 app.debug=CONFIG.DEBUG
@@ -189,6 +192,7 @@ def oauth2callback():
 
 @app.route('/setrange', methods=['POST'])
 def setrange():
+    global formdateend, formdatestart
     """
     User chose a date range with the bootstrap daterange
     widget.
@@ -199,6 +203,9 @@ def setrange():
     daterange = request.form.get('daterange')
     flask.session['daterange'] = daterange
     daterange_parts = daterange.split()
+    formdatestart = interpret_date(daterange_parts[0])
+    formdateend = interpret_date(daterange_parts[2])
+    
     flask.session['begin_date'] = interpret_date(daterange_parts[0])
     flask.session['end_date'] = interpret_date(daterange_parts[2])
     app.logger.debug("Setrange parsed {} - {}  dates as {} - {}".format(
@@ -208,45 +215,31 @@ def setrange():
 
 @app.route("/getTime", methods=['POST'])
 def getbusy():
-    startdate = request.form["startTime"]
-    enddate = request.form["endTime"]
-    sel = request.form.getlist("calendarselect")     #needs work, get the VALUE of the div the button is attached to?
+    global formdateend, formdatestart
+    
+    starttime = request.form["startTime"]         #get auth credentials, form data
+    endtime = request.form["endTime"]
+    sel = request.form.getlist("calendarselect")
     cred = valid_credentials()
     gcal = get_gcal_service(cred)
     
-    daterange = request.form.get('daterange')   #daterange isn't definined for this form, find another way
-    daterange_parts = daterange.split()
+    starttime = arrow.get(formdatestart).replace(hour=int(starttime))   #sets up the hour range
+    endtime = arrow.get(formdateend).replace(hour=int(endtime))
     
-    truestart = arrow.get(startdate + daterange_parts[0]).isoformat()
-    trueend = arrow.get(enddate + daterange_parts[1]).isoformat()
-    print(truestart)
-    print(trueend)
+    grabbeddates = list_busy_times(gcal, endtime.isoformat(), starttime.isoformat(), sel) #gets calendar busy times
+    print(grabbeddates)
+    cleantime = []
+    place = 1
+    i = 0
+    while i < len(grabbeddates):                                                         #the list is on the messy side
+        cleaned = "From " + str(arrow.get(grabbeddates[i]).year) + "/" + str(arrow.get(grabbeddates[i]).month)  + "/" + str(arrow.get(grabbeddates[i]).day) +  " at " + str(arrow.get(grabbeddates[i]).hour) + ":" + str(arrow.get(grabbeddates[i]).minute) + " to " + str(arrow.get(grabbeddates[place]).year) + "/" + str(arrow.get(grabbeddates[place]).month)  + "/" + str(arrow.get(grabbeddates[place]).day) + " at " + str(arrow.get(grabbeddates[place]).hour) + ":" + str(arrow.get(grabbeddates[place]).minute)  #so we combine it into a more reader-friendly list
+        cleantime.append(cleaned)                                           #also helps jinja2 formatting
+        place +=2
+        i+= 2
     
-    flask.g.busy = list_busy_times(gcal, trueend, truestart, sel)
-    
-    
-    
-    return render_template("index.html")
 
-    #scan the calendars obtained from the user (and the ones they chose)
-    #get each one's freebusy attribute, find start time and end time based on chosen range
-    #construct arrow objects for the range
-    #convert them to dates and display them on the page
-    #
-    #functionality issue: two calendars with the same busy times will cause this to create 2 arrow dates
-    #solution: put the ranges in a set or something first, then read them off
-    #
-    #usability issue: two ranges which share the same busy ranges between them but have different end/start times should be
-    # combined into one range. for example, a range from 12:00 to 14:00 and a range of 13:00 to 15:00 should not be two individual
-    # entries, but one combined one with a range from 12:00 to 15:00. Because the user is busy for any of the dates listed,
-    # giving both busy ranges when there's crossover is hardly optimal. Implement later, the actual ranges come first.
-    #
-    #also cutoff merge, if the busy range extends past (but still partially exists in) the user's range,
-    #trim the leading hours down so it fits within the range
-    #
-    #once the ranges have been established, format with jinja2
-    #
-    #
+    flask.g.busy = cleantime                                                #defines flask.g.busy, jinja2 formats this in html
+    return render_template("index.html")
 
 ####
 #
@@ -368,28 +361,43 @@ def list_calendars(service):
 def list_busy_times(service, max, min, selected):
     busyrange = service.freebusy()
     cal_list = service.calendarList().list().execute()["items"]
+    print(cal_list)
+    
           
-    querymain =  {"timeMax" : max, "items" : [], "timeMin" : min } #FLASK_MIN and MAX are gotten by the html
+    querymain =  {"timeMax" : max, "items" : [], "timeMin" : min } #pipe in the list_calendars logic
     grbody = []
     print("SELETED CALENDARS:")
     print(selected)
+    
+    callist = list_calendars(service)
+    for item in selected:
+        if callist[item]["id"] == item:                               #if said calendar is one of the ones we chose
+            body = {"id" : item["id" }
+            grbody.append(body)                                        #fix this logic, as is it's getting the value of the main calendar only, because it incidentally has the same name as the entire calendarlist ID. Use list_calendars, then get the dict of each calendar, then check each dict's ID against the selected list. If they match, add their ID to the query. Then query it like normal and go. Everything else should fall into place.
+    
+    
           
     for cal in cal_list:
           if cal["id"] in selected:
             body = {"id" : cal["id"]}
             grbody.append(body)
-            
-            ##maybe fuse the calendar's start/end dates with the time?
-            ##you know, to ensure it checks the time the calendar is for
-            ##rather than jan 1st, 2016
+
+
     querymain["items"] = grbody
     print(querymain)
     busy_times = busyrange.query(body=querymain).execute()
-    print(busy_times["calendars"])
-    print("AAA")
-          
-    return (busy_times)         #for use in a later function above
-          #also maybe introduce arrow formatting here
+    print(grbody)
+    print("BUSY TIMES:")
+    print(busy_times)
+    busy_range = []
+    for item in selected:
+        parse = busy_times["calendars"][item]["busy"]
+        for item in parse:
+            busy_range.append(arrow.get(item["start"]).to('local').isoformat())  #sets the timezone
+            busy_range.append(arrow.get(item["end"]).to('local').isoformat())
+    
+
+    return (busy_range)
 
           
 
