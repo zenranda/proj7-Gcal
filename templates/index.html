@@ -80,8 +80,9 @@
 {% if g.calendars is defined  %}
   <h2>Select time range:</h2>
   <form action="/getTime" method="post">
-  <input type="text" name="startTime" value="12:00"><br>
-  <input type="text" name="endTime" value ="16:00"><br>
+  <h3>Hours to check</h3>
+  <input type="text" name="startTime" value="12"><br>
+  <input type="text" name="endTime" value ="16"><br>
   <input type="submit" value = "Submit">
   <br>
   <div class="row">
@@ -98,8 +99,9 @@
 
 
 {% if g.busy is defined %}
+    <h2>Busy ranges</h2>
     {% for itm in g.busy %}
-        {{itm}}
+        {{itm}} <br>
     {% endfor %}
 {% endif %}
     
