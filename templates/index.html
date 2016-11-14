@@ -79,26 +79,29 @@
 
 {% if g.calendars is defined  %}
   <h2>Select time range:</h2>
-  <form action="/index" method="post">
+  <form action="/getTime" method="post">
   <input type="text" name="startTime" value="12:00"><br>
   <input type="text" name="endTime" value ="16:00"><br>
   <input type="submit" value = "Submit">
+  <br>
   <div class="row">
   {% for cal in g.calendars if cal.selected %}
           <div class="col-md-4">
-              <input type="checkbox" name="calendarselect"> {{ cal.summary }}<br>
+              <input type="checkbox" name="calendarselect", value = {{cal.summary }}> {{ cal.summary }}<br>
           </div>
          {% if loop.index is divisibleby 3 %}
           </div> <div class="row">
          {% endif %}
   {% endfor %}
-  <input type="submit" value ="Submit">
   </div>
 {% endif %}
 
 
-{% if g.busy is defined % }
+{% if g.busy is defined %}
     {% for itm in g.busy %}
+        {{itm}}
+    {% endfor %}
+{% endif %}
     
 
 <!---TODO: create a flask function to get the selected calendar names, then get intersected dates for them and feed them back to the page. return to /index? just add the ranges to flask.g.whatever, then use the same logic to feed them back into a page for the loop. Issues:    --->
