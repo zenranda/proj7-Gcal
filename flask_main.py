@@ -206,15 +206,23 @@ def setrange():
       flask.session['begin_date'], flask.session['end_date']))
     return flask.redirect(flask.url_for("choose"))
 
-@app.route("/index", methods=['SEND'])
+@app.route("/getTime", methods=['POST'])
 def getbusy():
     startdate = request.form["startTime"]
     enddate = request.form["endTime"]
-    sel = request.form["calendarselect"]     #needs work, get the VALUE of the div the button is attached to?
+    sel = request.form.getlist("calendarselect")     #needs work, get the VALUE of the div the button is attached to?
     cred = valid_credentials()
     gcal = get_gcal_service(cred)
     
-    flask.g.busy = list_busy_times(gcal, enddate, starttdate, sel)
+    daterange = request.form.get('daterange')   #daterange isn't definined for this form, find another way
+    daterange_parts = daterange.split()
+    
+    truestart = arrow.get(startdate + daterange_parts[0]).isoformat()
+    trueend = arrow.get(enddate + daterange_parts[1]).isoformat()
+    print(truestart)
+    print(trueend)
+    
+    flask.g.busy = list_busy_times(gcal, trueend, truestart, sel)
     
     
     
@@ -331,8 +339,6 @@ def list_calendars(service):
     app.logger.debug("Entering list_calendars")  
     busy_times = service.freebusy()
     calendar_list = service.calendarList().list().execute()["items"]
-    print(busy_times.query()
-
     result = [ ]
     for cal in calendar_list:
         print("Calendar\n")
@@ -363,15 +369,24 @@ def list_busy_times(service, max, min, selected):
     busyrange = service.freebusy()
     cal_list = service.calendarList().list().execute()["items"]
           
-    querymain =  {"timeMax" : FLASK_MAX, "items" : [], "timeMin" : FLASK_MIN } #FLASK_MIN and MAX are gotten by the html
+    querymain =  {"timeMax" : max, "items" : [], "timeMin" : min } #FLASK_MIN and MAX are gotten by the html
     grbody = []
+    print("SELETED CALENDARS:")
+    print(selected)
           
     for cal in cal_list:
-          if cal["id"] in SELECTED_CALENDARS:                                  #SELECTED_CALENDARS are gotten by the html too
-          body = {"id" : cal["id"]
-          grbody.append(body)
-    
-    busy_times = busyrange.query(grbody).list()
+          if cal["id"] in selected:
+            body = {"id" : cal["id"]}
+            grbody.append(body)
+            
+            ##maybe fuse the calendar's start/end dates with the time?
+            ##you know, to ensure it checks the time the calendar is for
+            ##rather than jan 1st, 2016
+    querymain["items"] = grbody
+    print(querymain)
+    busy_times = busyrange.query(body=querymain).execute()
+    print(busy_times["calendars"])
+    print("AAA")
           
     return (busy_times)         #for use in a later function above
           #also maybe introduce arrow formatting here
