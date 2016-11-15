@@ -1,55 +1,32 @@
-# proj6-Gcal
-Snarf appointment data from a selection of a user's Google calendars 
+# README #
 
-## What is here
+###CS322 Project 7: Google Calendar; Busy Times###
+###Author: Marc Leppold###
 
-I've provided code for the authorization (oauth2) protocol for Google
-calendars.  There is also a picker for a date range. 
+##Project Notes
 
-## What you'll add
+The seventh project in CS322. A program that finds all the blocks of time that are busy in the user's Google Calendars. When the user first connects, they authorize the program to read their Google Calendar information. Once they give consent, they select a date rate, an hour range and which calendars they want to check. Once all the information has been entered and the user presses "Submit", this program retrieves the busy blocks of time that fit the criteria and returns them in sorted order.
 
-You'll need to read the Google developer documentation to learn how to
-obtain information from the Google Calendar service.
+Requires internet access in order to transact with Google. Requires the user to have a valid Google account and calendar data on Google Calendars with busy appointments on them. Attempting to use this program with a Google account that has no calendars will result in nothing being returned.
 
-Your application should allow the user to choose calendars (a single
-user may have several Google calendars, one of which is the 'primary'
-calendar) and list 'blocking'  (non-transparent)
-appointments between a start date and an end date
-for some subset of them.
+Usage note: Hour ranges are from 0...23. Entering an hour that doesn't fit this range or that isn't an integer will cause a crash.
 
-## Hints
+Requires client credentials as well as an API key from Google; neither are included in this repository and are only supplied in certain distributions of this program. The user must supply their own otherwise.
 
-You'll need a 'client secret' file of your own.  It should *not* be
-under GIT control.  This is kind of a
-developer key, which you need to obtain from Google.  See
-https://auth0.com/docs/connections/social/google and
-https://developers.google.com/identity/protocols/OAuth2 .
-The applicable scenario for us is 'Web server applications'  (since
-we're doing this in Flask).  
+### USAGE ###
 
-Your client secret will have to be registered for the URLs used for 
-the oauth2 'callback' in the authorization protocol.  This URL includes
-the port on which your application is running, so you you will need to 
-use the same port each time you run your application. You can register 
-the same key for multiple URLs, so for example I have registered mine
-for localhost:5000/oauth2callback, localhost:8000/oauth2callback, 
-roethke.d.cs.uoregon.edu:5000/oauth2callback, and 
-roethke.d.cs.uoregon.edu:8000/oauth2callback. (Roethke is my raspberry Pi
-at school.)  When we test your code, our grader and I will use our own 
-admin_secrets.py and google credentials files, but we will use your 
-client_secrets.py file.  As in the last project, your client_secrets.py
-file should include a reference to your repository and to your name, 
-so that our friendly (but clumsy) robots can use it to install your code. 
+Execute the following commands
+```
+git clone https://github.com/zenranda/proj7-Gcal InstallDirectory
+cd InstallDirectory
+. configure
+make run
+```
+where InstallDirectory is the directory you cloned the files to.
 
-I have noticed that getting the list of calendars from Google is very very 
-slow when running on my laptop at home, and snappier when accessing through
-roethke.  I suspect that is because roethke.d.cs.uoregon.edu is is 
-a routable IP address, while "localhost" on my home network requires some
-behind-the-curtains magic from my home router.  I don't know that for sure. 
-
-Whether or not you already have a Google calendar, it's a good idea to
-create one or two 'test' calendars with a known set of appointments
-for testing.
-
-
-
+Then while it's running, enter
+```
+HOST:PORT
+```
+into an internet browser, where HOST is the host IP of the computer the program is running on and PORT is the port it's configured to (default 5000).
+Please note that this program requires a constant internet connection in order to recieve and send calendar info and authorization. If you wish to use your own API key from Google, make sure to include HOST and HOST/oauth2callback in its URI specifications.

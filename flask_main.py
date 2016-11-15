@@ -234,7 +234,7 @@ def getbusy():
     while i < len(grabbeddates):                                                         #the list is on the messy side
         cleaned = "From " + str(arrow.get(grabbeddates[i]).year) + "/" + str(arrow.get(grabbeddates[i]).month)  + "/" + str(arrow.get(grabbeddates[i]).day) +  " at " + str(arrow.get(grabbeddates[i]).hour) + ":" + str(arrow.get(grabbeddates[i]).minute) + " to " + str(arrow.get(grabbeddates[place]).year) + "/" + str(arrow.get(grabbeddates[place]).month)  + "/" + str(arrow.get(grabbeddates[place]).day) + " at " + str(arrow.get(grabbeddates[place]).hour) + ":" + str(arrow.get(grabbeddates[place]).minute)  #so we combine it into a more reader-friendly list. theoretically.
         cleantime.append(cleaned)                                           #also helps jinja2 formatting
-        place +=2                                                           #indexing so we  combine item 0/1, 2/3, 4/5, 6/7....
+        place +=2                                                           #indexing so we combine item 0/1, 2/3, 4/5, 6/7....
         i+= 2
     
     
@@ -359,23 +359,21 @@ def list_calendars(service):
 def list_busy_times(service, max, min, selected):
     busyrange = service.freebusy()    
           
-    querymain =  {"timeMax" : max, "items" : [], "timeMin" : min }
-    grbody = []
+    querymain =  {"timeMax" : max, "items" : [], "timeMin" : min } #query on no calendars, to be filled later
+    grbody = []                                                 
     
     callist = list_calendars(service)
     for item in callist:
         if item["id"] in selected:                               #if said calendar is one of the ones we chose
-            body = {"id" : item["id"] }
-            grbody.append(body)
-                     
-
+            body = {"id" : item["id"] }                          #constructs a dict of calendars to query
+            grbody.append(body)                                  #adds them to the total query
 
     querymain["items"] = grbody
-    busy_times = busyrange.query(body=querymain).execute()
+    busy_times = busyrange.query(body=querymain).execute()       #query busytimes with for the selected calendars
     
     busy_range = []
-    for item in selected:
-        parse = busy_times["calendars"][item]["busy"]
+    for item in selected:                                        #once we get the busy times, we separate start and end, then send them
+        parse = busy_times["calendars"][item]["busy"]            # back to getbusy() to be formatted and sent to the html
         for item in parse:
             busy_range.append(arrow.get(item["start"]).to('local').isoformat())  #sets the timezone
             busy_range.append(arrow.get(item["end"]).to('local').isoformat())
