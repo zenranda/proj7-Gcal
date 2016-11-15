@@ -227,18 +227,18 @@ def getbusy():
     endtime = arrow.get(formdateend).replace(hour=int(endtime))
     
     grabbeddates = list_busy_times(gcal, endtime.isoformat(), starttime.isoformat(), sel) #gets calendar busy times
-    print(grabbeddates)
+    
     cleantime = []
     place = 1
     i = 0
     while i < len(grabbeddates):                                                         #the list is on the messy side
-        cleaned = "From " + str(arrow.get(grabbeddates[i]).year) + "/" + str(arrow.get(grabbeddates[i]).month)  + "/" + str(arrow.get(grabbeddates[i]).day) +  " at " + str(arrow.get(grabbeddates[i]).hour) + ":" + str(arrow.get(grabbeddates[i]).minute) + " to " + str(arrow.get(grabbeddates[place]).year) + "/" + str(arrow.get(grabbeddates[place]).month)  + "/" + str(arrow.get(grabbeddates[place]).day) + " at " + str(arrow.get(grabbeddates[place]).hour) + ":" + str(arrow.get(grabbeddates[place]).minute)  #so we combine it into a more reader-friendly list
+        cleaned = "From " + str(arrow.get(grabbeddates[i]).year) + "/" + str(arrow.get(grabbeddates[i]).month)  + "/" + str(arrow.get(grabbeddates[i]).day) +  " at " + str(arrow.get(grabbeddates[i]).hour) + ":" + str(arrow.get(grabbeddates[i]).minute) + " to " + str(arrow.get(grabbeddates[place]).year) + "/" + str(arrow.get(grabbeddates[place]).month)  + "/" + str(arrow.get(grabbeddates[place]).day) + " at " + str(arrow.get(grabbeddates[place]).hour) + ":" + str(arrow.get(grabbeddates[place]).minute)  #so we combine it into a more reader-friendly list. theoretically.
         cleantime.append(cleaned)                                           #also helps jinja2 formatting
-        place +=2
+        place +=2                                                           #indexing so we  combine item 0/1, 2/3, 4/5, 6/7....
         i+= 2
     
-
-    flask.g.busy = cleantime                                                #defines flask.g.busy, jinja2 formats this in html
+    
+    flask.g.busy = sorted(cleantime, key=str.lower)  #defines flask.g.busy, sorts it. jinja2 formats this
     return render_template("index.html")
 
 ####
@@ -334,8 +334,6 @@ def list_calendars(service):
     calendar_list = service.calendarList().list().execute()["items"]
     result = [ ]
     for cal in calendar_list:
-        print("Calendar\n")
-        print(cal)
         kind = cal["kind"]
         id = cal["id"]
         if "description" in cal: 
@@ -359,36 +357,22 @@ def list_calendars(service):
           
           
 def list_busy_times(service, max, min, selected):
-    busyrange = service.freebusy()
-    cal_list = service.calendarList().list().execute()["items"]
-    print(cal_list)
-    
+    busyrange = service.freebusy()    
           
-    querymain =  {"timeMax" : max, "items" : [], "timeMin" : min } #pipe in the list_calendars logic
+    querymain =  {"timeMax" : max, "items" : [], "timeMin" : min }
     grbody = []
-    print("SELETED CALENDARS:")
-    print(selected)
     
     callist = list_calendars(service)
-    for item in selected:
-        if callist[item]["id"] == item:                               #if said calendar is one of the ones we chose
-            body = {"id" : item["id" }
-            grbody.append(body)                                        #fix this logic, as is it's getting the value of the main calendar only, because it incidentally has the same name as the entire calendarlist ID. Use list_calendars, then get the dict of each calendar, then check each dict's ID against the selected list. If they match, add their ID to the query. Then query it like normal and go. Everything else should fall into place.
-    
-    
-          
-    for cal in cal_list:
-          if cal["id"] in selected:
-            body = {"id" : cal["id"]}
+    for item in callist:
+        if item["id"] in selected:                               #if said calendar is one of the ones we chose
+            body = {"id" : item["id"] }
             grbody.append(body)
+                     
 
 
     querymain["items"] = grbody
-    print(querymain)
     busy_times = busyrange.query(body=querymain).execute()
-    print(grbody)
-    print("BUSY TIMES:")
-    print(busy_times)
+    
     busy_range = []
     for item in selected:
         parse = busy_times["calendars"][item]["busy"]
