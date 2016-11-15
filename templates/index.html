@@ -83,7 +83,6 @@
   <h3>Hours to check</h3>
   <input type="text" name="startTime" value="12"><br>
   <input type="text" name="endTime" value ="20"><br>
-  <input type="submit" value = "Submit">
   <br>
   <div class="row">
   <h3> (Using which calendars?) </h3>
@@ -96,7 +95,11 @@
          {% endif %}
   {% endfor %}
   </div>
+  
+  <br>
+<input type="submit" value = "Submit">
 {% endif %}
+
 
 
 {% if g.busy is defined %}
