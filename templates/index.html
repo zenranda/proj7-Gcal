@@ -82,13 +82,14 @@
   <form action="/getTime" method="post">
   <h3>Hours to check</h3>
   <input type="text" name="startTime" value="12"><br>
-  <input type="text" name="endTime" value ="16"><br>
+  <input type="text" name="endTime" value ="20"><br>
   <input type="submit" value = "Submit">
   <br>
   <div class="row">
+  <h3> (Using which calendars?) </h3>
   {% for cal in g.calendars if cal.selected %}
           <div class="col-md-4">
-              <input type="checkbox" name="calendarselect", value = {{cal.summary }}> {{ cal.summary }}<br>
+              <input type="checkbox" checked name="calendarselect", value = {{cal.id }}> {{ cal.summary }}<br>
           </div>
          {% if loop.index is divisibleby 3 %}
           </div> <div class="row">
